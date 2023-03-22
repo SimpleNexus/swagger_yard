@@ -86,14 +86,10 @@ module SwaggerYard
 
     def extended_attributes
       @extensions.tap do |h|
-        # Rails controller/action: if constantize/controller_path methods are
-        # unavailable or constant is not defined, catch exception and skip these
-        # attributes.
-        begin
-          h["x-controller"] = api_group.class_name.constantize.controller_path.to_s
-          h["x-action"]     = ruby_method.to_s
-        rescue NameError, NoMethodError
-        end
+        h["x-api-resource"] = {
+          "class" => api_group.class_name,
+          "method" => ruby_method.to_s
+        }
       end
     end
 
