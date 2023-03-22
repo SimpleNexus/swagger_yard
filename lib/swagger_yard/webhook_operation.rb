@@ -67,6 +67,10 @@ module SwaggerYard
       event_item.webhook
     end
 
+    def group
+      webhook
+    end
+
     def tags
       [webhook.webhook_resource].compact
     end

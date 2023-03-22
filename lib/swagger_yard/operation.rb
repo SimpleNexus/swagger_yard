@@ -66,6 +66,10 @@ module SwaggerYard
       path_item.api_group
     end
 
+    def group
+      api_group
+    end
+
     def tags
       [api_group.resource].compact
     end

@@ -66,21 +66,6 @@ module SwaggerYard
       op_hash
     end
 
-    def webhook_operation(op)
-      op_hash = super
-      if body_param = op.parameters.detect { |p| p.param_type == 'body' }
-        op_hash['requestBody'] = {
-          'description' => body_param.description,
-          'content' => {
-            'application/json' => {
-              'schema' => body_param.type.schema_with(model_path: model_path)
-            }
-          }
-        }
-      end
-      op_hash
-    end
-
     def response(resp, op)
       {}.tap do |h|
         h['description'] = resp && resp.description || op.summary || ''
