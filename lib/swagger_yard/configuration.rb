@@ -6,6 +6,7 @@ module SwaggerYard
     attr_accessor :controller_path, :model_path
     attr_accessor :path_discovery_function
     attr_accessor :security_definitions
+    attr_accessor :include_private
     attr_accessor :ignore_internal
     attr_accessor :default_summary_to_description
     attr_accessor :terms_of_service
@@ -25,6 +26,7 @@ module SwaggerYard
       @description = "Configure description with SwaggerYard.config.description"
       @security_definitions = {}
       @external_schema = {}
+      @include_private = true
       @ignore_internal = false
       @default_summary_to_description = true
     end

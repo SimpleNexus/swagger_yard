@@ -1,4 +1,4 @@
-# SwaggerYard [![Build Status](https://travis-ci.org/livingsocial/swagger_yard.svg?branch=master)](https://travis-ci.org/livingsocial/swagger_yard) #
+# SwaggerYard [![Build Status](https://github.com/livingsocial/swagger_yard/actions/workflows/rspec.yml/badge.svg)](https://github.com/livingsocial/swagger_yard/actions/workflows/rspec.yml)
 
 SwaggerYard is a gem to convert custom YARD tags in comments into Swagger 2.0 or OpenAPI 3.0.0 specs.
 
@@ -32,6 +32,11 @@ Place configuration in a Rails initializer or suitable configuration file:
 
       # Where to find models (can be an array)
       config.model_path = ::Rails.root + 'app/decorators/**/*'
+
+      # Whether to include controller methods marked as private
+	  # (either with ruby `private` or YARD `# @visibility private`
+	  # Default: true
+	  config.include_private = true
     end
 
 Then start to annotate controllers and models as described below.
@@ -107,6 +112,18 @@ class Accounts::OwnershipsController < ActionController::Base
   end
 end
 ```
+
+#### Private controllers/actions
+
+When you set `include_private = false` in the SwaggerYard configuration, you can mark action methods as private, so that they won't be documented, using `@visibility private` in comments.
+
+```ruby
+  ##
+  # @visibility private
+  def show
+  end
+```
+
 
 ### Standalone Path ###
 
@@ -201,6 +218,7 @@ Types of things (parameters or responses of an operation, properties of a model)
 - Basic types (integer, boolean, string, object, number, date, time, date-time, uuid, etc.) should be lowercased.
 - An array of models or basic types is specified with `[array<...>]`.
 - An enum of allowed string values is specified with `[enum<one,two,three>]`.
+- An enum of allowed values that are defined in the application `[enum<{CURRENCIES}>]`.
 - An object definition can include the property definitions of its fields, and / or of an additional property for any remaining allowed fields. E.g., `[object<name: string, age: integer,  string >]`
 - Structured data like objects, arrays, pairs, etc., definitions can also be nested; E.g., `[object<pairs:array<object<right:integer,left:integer>>>]`
 - JSON-Schema `format` attributes can be specified for basic types using `<...>`. For example, `[integer<int64>]` produces JSON `{ "type": "integer", "format": "int64" }`.
@@ -366,6 +384,7 @@ Supported formats for the `@authorization` tag are as follows:
 # @authorization [basic] mybasicauth The rest is a description
 # @authorization [digest] digestauth The rest is a description
 # @authorization [<any-rfc7235-auth>] myrfcauth The rest is a description
+```
 
 - For `apiKey` the name of the authorization is formed as `"#{location}_#{key_name}".downcase.gsub('-','_')`.
   Example: `@authorization [apiKey] header X-API-Key` is named `header_x_api_key`. (This naming scheme is kept for backwards compatibility.)
