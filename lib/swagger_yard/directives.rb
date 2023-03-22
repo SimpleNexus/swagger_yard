@@ -59,4 +59,34 @@ module SwaggerYard::Directives
       obj
     end
   end
+
+  # A directive used to create a event tag with a dummy class.
+  class EventDirective < YARD::Tags::Directive
+
+    def call; end
+
+    def after_parse
+      return unless handler
+
+      create_object
+    end
+
+    def create_object
+      name = "#{tag.text}_#{tag.types.first}"
+      obj = YARD::CodeObjects::MethodObject.new(handler.namespace, name)
+      handler.register_file_info(obj)
+      handler.register_source(obj)
+      handler.register_group(obj)
+      obj.docstring = YARD::Docstring.new!(parser.text,
+                                           parser.tags,
+                                           obj,
+                                           parser.raw_text,
+                                           parser.reference)
+      obj.add_tag(YARD::Tags::Tag.new(:event, tag.text, tag.types))
+      handler.register_module_function(obj)
+      parser.object = obj
+      parser.post_process
+      obj
+    end
+  end
 end

@@ -1,22 +1,23 @@
 module SwaggerYard
-  class Operation
+  class WebhookOperation
     attr_accessor :description, :ruby_method
     attr_writer :summary
     attr_writer :operation_id
-    attr_reader :path, :http_method
+    attr_reader :event, :http_method
     attr_reader :parameters
-    attr_reader :path_item, :responses, :extensions
+    attr_reader :event_item, :responses, :extensions
 
     # TODO: extract to operation builder?
-    def self.from_yard_object(yard_object, path_item)
-      new(path_item).tap do |operation|
+    def self.from_yard_object(yard_object, event_item)
+      new(event_item).tap do |operation|
         operation.ruby_method = yard_object.name(false)
         operation.description = yard_object.docstring
         yard_object.tags.each do |tag|
           case tag.tag_name
-          when "path"
-            tag = SwaggerYard.requires_type(tag)
-            operation.add_path_params_and_method(tag) if tag
+          when "event"
+            # tag = SwaggerYard.requires_type(tag)
+            # operation.add_event_params_and_method(tag) if tag
+            operation.add_event_params_and_method(tag)
           when "parameter"
             operation.add_parameter(tag)
           when "response_type"
@@ -43,8 +44,8 @@ module SwaggerYard
       end
     end
 
-    def initialize(path_item)
-      @path_item      = path_item
+    def initialize(event_item)
+      @event_item      = event_item
       @summary        = nil
       @operation_id  = nil
       @description    = ""
@@ -59,15 +60,15 @@ module SwaggerYard
     end
 
     def operation_id
-      @operation_id || "#{api_group.resource}-#{ruby_method}"
+      @operation_id || "#{webhook.webhook_resource}-#{ruby_method}"
     end
 
-    def api_group
-      path_item.api_group
+    def webhook
+      event_item.webhook
     end
 
     def tags
-      [api_group.resource].compact
+      [webhook.webhook_resource].compact
     end
 
     def responses_by_status
@@ -82,26 +83,25 @@ module SwaggerYard
     def extended_attributes
       @extensions.tap do |h|
         h["x-api-resource"] = {
-          "class" => api_group.class_name,
+          "class" => webhook.class_name,
           "method" => ruby_method.to_s
         }
       end
     end
 
     ##
-    # Example: [GET] /api/v2/ownerships
-    # Example: [PUT] /api/v1/accounts/{account_id}
-    def add_path_params_and_method(tag)
-      if @path && @http_method
-        SwaggerYard.log.warn 'multiple path tags not supported: ' \
-          "ignored [#{tag.types.first}] #{tag.text}"
+    # Example: [POST] something_created_event
+    def add_event_params_and_method(tag)
+      if @event && @http_method
+        SwaggerYard.log.warn 'multiple event tags not supported: ' \
+          "ignored [#{tag.types&.first}] #{tag.text}"
         return
       end
 
-      @path = tag.text
-      @http_method = tag.types.first
+      @event = tag.text
+      @http_method = tag.types&.first || "POST"
 
-      parse_path_params(tag.text).each do |name|
+      parse_event_params(tag.text).each do |name|
         add_or_update_parameter Parameter.from_path_param(name)
       end
     end
@@ -124,7 +124,7 @@ module SwaggerYard
         existing.allow_multiple = parameter.allow_multiple
       elsif parameter.param_type == 'body' && @parameters.detect {|param| param.param_type == 'body'}
         SwaggerYard.log.warn 'multiple body parameters invalid: ' \
-          "ignored #{parameter.name} for #{@path_item.api_group.class_name}##{ruby_method}"
+          "ignored #{parameter.name} for #{@event_item.webhook.class_name}##{ruby_method}"
       else
         @parameters << parameter
       end
@@ -186,8 +186,8 @@ module SwaggerYard
     end
 
     private
-    def parse_path_params(path)
-      path.scan(/\{([^\}]+)\}/).flatten
+    def parse_event_params(event)
+      event.scan(/\{([^\}]+)\}/).flatten
     end
 
     def default_summary

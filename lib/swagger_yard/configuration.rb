@@ -3,7 +3,7 @@ module SwaggerYard
     attr_accessor :api_version, :api_base_path
     attr_accessor :swagger_version
     attr_accessor :title, :description
-    attr_accessor :controller_path, :model_path
+    attr_accessor :controller_path, :model_path, :webhook_path
     attr_accessor :path_discovery_function
     attr_accessor :security_definitions
     attr_accessor :include_private

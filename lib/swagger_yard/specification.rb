@@ -3,17 +3,26 @@ module SwaggerYard
     attr_accessor :authorizations
 
     def initialize(controller_path = SwaggerYard.config.controller_path,
-                   model_path = SwaggerYard.config.model_path)
+                   model_path = SwaggerYard.config.model_path,
+                   webhook_path = SwaggerYard.config.webhook_path
+                  )
       @model_paths = [*model_path].compact
       @controller_paths = [*controller_path].compact
+      @webhook_paths = [*webhook_path].compact
 
       @resource_to_file_path = {}
       @authorizations = []
     end
 
     def path_objects
-      api_groups.map(&:paths).reduce(Paths.new({}), :merge).tap do |paths|
+      api_groups.map(&:paths).reduce(Paths.new, :merge).tap do |paths|
         warn_duplicate_operations(paths)
+      end
+    end
+
+    def webhook_objects
+      webhooks.map(&:events).reduce(Events.new, :merge).tap do |events|
+        warn_duplicate_webhook_operations(events)
       end
     end
 
@@ -57,6 +66,10 @@ module SwaggerYard
       @api_groups ||= parse_controllers.select { |group| group.path_items.present? }
     end
 
+    def webhooks
+      @webhooks ||= parse_webhooks.select { |webhook_group| webhook_group.event_items.present? }
+    end
+
     def parse_models
       @model_paths.map do |model_path|
         Dir[model_path.to_s].map do |file_path|
@@ -80,12 +93,38 @@ module SwaggerYard
       end.flatten.select(&:valid?)
     end
 
+    def parse_webhooks
+      @webhook_paths.map do |webhook_path|
+        Dir[webhook_path.to_s].map do |file_path|
+          SwaggerYard.yard_class_objects_from_file(file_path).map do |obj|
+            obj.tags.select {|t| t.tag_name == "authorization"}.each do |t|
+              @authorizations << Authorization.from_yard_object(t)
+            end
+            Webhook.from_yard_object(obj)
+          end
+        end
+      end.flatten.select(&:valid?)
+    end
+
     def warn_duplicate_operations(paths)
       operation_ids = []
-      paths.path_items.each do |path,pi|
+      paths.path_items.each do |_, pi|
         pi.operations.each do |_, op|
           if operation_ids.include?(op.operation_id)
             SwaggerYard.log.warn("duplicate operation #{op.operation_id}")
+            next
+          end
+          operation_ids << op.operation_id
+        end
+      end
+    end
+
+    def warn_duplicate_webhook_operations(events)
+      operation_ids = []
+      events.event_items.each do |_, ei|
+        ei.webhook_operations.each do |_, op|
+          if operation_ids.include?(op.operation_id)
+            SwaggerYard.log.warn("duplicate webhook operation #{op.operation_id}")
             next
           end
           operation_ids << op.operation_id

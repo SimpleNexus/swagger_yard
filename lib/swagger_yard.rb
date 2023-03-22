@@ -7,15 +7,22 @@ require "swagger_yard/example"
 require "swagger_yard/parameter"
 require "swagger_yard/property"
 require "swagger_yard/operation"
+require "swagger_yard/webhook_operation"
+require "swagger_yard/response"
 require "swagger_yard/authorization"
 require "swagger_yard/specification"
 require "swagger_yard/api_group"
+require "swagger_yard/paths"
+require "swagger_yard/tag"
+require "swagger_yard/webhook"
 require "swagger_yard/model"
 require "swagger_yard/path_item"
 require "swagger_yard/swagger"
 require "swagger_yard/openapi"
 require "swagger_yard/handlers"
 require "swagger_yard/directives"
+require "swagger_yard/event_item"
+require "swagger_yard/events"
 
 module SwaggerYard
   class Error < StandardError; end
@@ -119,10 +126,13 @@ module SwaggerYard
       ::YARD::Tags::Library.define_tag("Authorization", :authorization, :with_types_and_name)
       ::YARD::Tags::Library.define_tag("Authorization Use", :authorize_with)
       ::YARD::Tags::Library.define_tag("Tag group", :tag_group)
+      ::YARD::Tags::Library.define_tag("Webhook resource", :webhook)
+      ::YARD::Tags::Library.define_tag("Webhook event", :event, :with_types)
       # @example is a core YARD tag, let's use it
       # ::YARD::Tags::Library.define_tag("Example", :example, :with_title_and_text)
       ::YARD::Tags::Library.define_directive(:model, :with_title_and_text, Directives::ParamClassDirective)
       ::YARD::Tags::Library.define_directive(:path, :with_types, Directives::PathDirective)
+      ::YARD::Tags::Library.define_directive(:event, :with_types, Directives::EventDirective)
     end
   end
 end

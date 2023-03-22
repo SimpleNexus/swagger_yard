@@ -46,6 +46,7 @@ module SwaggerYard
 
     def definitions
       { "paths"               => paths(specification.path_objects),
+        "x-webhooks"          => webhooks(specification.webhook_objects),
         "tags"                => tags(specification.tag_objects),
         "securityDefinitions" => security_defs(specification.security_objects) }
     end
@@ -87,6 +88,10 @@ module SwaggerYard
       Hash[paths.path_items.map {|path,pi| [path, operations(pi.operations)] }]
     end
 
+    def webhooks(webhooks)
+      Hash[webhooks.event_items.map {|event, pi| [event, webhook_operations(pi.webhook_operations)] }]
+    end
+
     def operations(ops)
       expanded_ops = ops.map do |meth, op|
 
@@ -107,6 +112,32 @@ module SwaggerYard
       op_hash["summary"]     = op.summary unless op.summary.empty?
 
       authorizations = op.api_group.authorizations
+      unless authorizations.empty?
+        op_hash["security"] = authorizations.map {|k,v| { k => v} }
+      end
+
+      op_hash.update(op.extended_attributes)
+    end
+
+    def webhook_operations(ops)
+      expanded_ops = ops.map do |meth, op|
+        [meth, webhook_operation(op)]
+      end
+      Hash[expanded_ops]
+    end
+
+    def webhook_operation(op)
+      op_hash = {
+        "tags"        => op.tags,
+        "operationId" => op.operation_id,
+        "parameters"  => parameters(op.parameters),
+        "responses"   => responses(op.responses_by_status, op),
+      }
+
+      op_hash["description"] = op.description unless op.description.empty?
+      op_hash["summary"]     = op.summary unless op.summary.empty?
+
+      authorizations = op.webhook.authorizations
       unless authorizations.empty?
         op_hash["security"] = authorizations.map {|k,v| { k => v} }
       end

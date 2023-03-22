@@ -22,6 +22,7 @@ module SwaggerYard
     def definitions
       defs = {
         "paths" => paths(specification.path_objects),
+        "x-webhooks" => webhooks(specification.webhook_objects),
         "tags" => tags(specification.tag_objects),
         "components" => components
       }
@@ -51,6 +52,21 @@ module SwaggerYard
     end
 
     def operation(op)
+      op_hash = super
+      if body_param = op.parameters.detect { |p| p.param_type == 'body' }
+        op_hash['requestBody'] = {
+          'description' => body_param.description,
+          'content' => {
+            'application/json' => {
+              'schema' => body_param.type.schema_with(model_path: model_path)
+            }
+          }
+        }
+      end
+      op_hash
+    end
+
+    def webhook_operation(op)
       op_hash = super
       if body_param = op.parameters.detect { |p| p.param_type == 'body' }
         op_hash['requestBody'] = {
