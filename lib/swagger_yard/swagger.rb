@@ -45,10 +45,14 @@ module SwaggerYard
     end
 
     def definitions
-      { "paths"               => paths(specification.path_objects),
-        "x-webhooks"          => webhooks(specification.webhook_objects),
+      defs = {
+        "paths"               => paths(specification.path_objects),
         "tags"                => tags(specification.tag_objects),
-        "securityDefinitions" => security_defs(specification.security_objects) }
+        "securityDefinitions" => security_defs(specification.security_objects)
+      }
+      webhooks = webhooks(specification.webhook_objects)
+      defs["x-webhooks"] = webhooks if webhooks.present?
+      return defs
     end
 
     def model_definitions
@@ -89,7 +93,7 @@ module SwaggerYard
     end
 
     def webhooks(webhooks)
-      Hash[webhooks.event_items.map {|event, pi| [event, operations(pi.webhook_operations)] }]
+      Hash[webhooks.event_items.map {|event, ei| [event, operations(ei.webhook_operations)] }]
     end
 
     def operations(ops)

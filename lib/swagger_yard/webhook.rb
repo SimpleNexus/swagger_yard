@@ -46,7 +46,7 @@ module SwaggerYard
       @description = yard_object.docstring
       @class_name  = yard_object.path
 
-      if tag = yard_object.tags.detect {|t| t.tag_name == "webhook"}
+      if tag = yard_object.tags.detect {|t| t.tag_name == "webhook_group"}
         @webhook_resource = tag.text
       end
 

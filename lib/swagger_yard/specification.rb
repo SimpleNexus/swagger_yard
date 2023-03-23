@@ -28,7 +28,7 @@ module SwaggerYard
 
     # Resources
     def tag_objects
-      api_groups.map(&:tag)
+      api_groups.map(&:tag) + webhooks.map(&:tag)
     end
 
     def tag_groups

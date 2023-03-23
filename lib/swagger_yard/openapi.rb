@@ -22,10 +22,11 @@ module SwaggerYard
     def definitions
       defs = {
         "paths" => paths(specification.path_objects),
-        "x-webhooks" => webhooks(specification.webhook_objects),
         "tags" => tags(specification.tag_objects),
         "components" => components
       }
+      webhooks = webhooks(specification.webhook_objects)
+      defs["x-webhooks"] = webhooks if webhooks.present?
       defs["x-tagGroups"] = specification.tag_groups if specification.tag_groups
       defs
     end

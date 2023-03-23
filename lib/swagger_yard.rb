@@ -126,7 +126,7 @@ module SwaggerYard
       ::YARD::Tags::Library.define_tag("Authorization", :authorization, :with_types_and_name)
       ::YARD::Tags::Library.define_tag("Authorization Use", :authorize_with)
       ::YARD::Tags::Library.define_tag("Tag group", :tag_group)
-      ::YARD::Tags::Library.define_tag("Webhook resource", :webhook)
+      ::YARD::Tags::Library.define_tag("Webhook group", :webhook_group)
       ::YARD::Tags::Library.define_tag("Webhook event", :event, :with_types)
       # @example is a core YARD tag, let's use it
       # ::YARD::Tags::Library.define_tag("Example", :example, :with_title_and_text)

@@ -13,8 +13,8 @@ module SwaggerYard
     end
 
     def +(other)
-      EventItem.new(webhook).tap do |pi|
-        pi.webhook_operations = webhook_operations.merge(other.webhook_operations)
+      EventItem.new(webhook).tap do |ei|
+        ei.webhook_operations = webhook_operations.merge(other.webhook_operations)
       end
     end
   end
