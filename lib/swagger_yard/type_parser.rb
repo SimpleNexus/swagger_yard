@@ -39,7 +39,9 @@ module SwaggerYard
 
       rule(:array)      { stri('array') >> spaced('<') >> type >> spaced('>') }
 
-      rule(:pair)       { (name.as(:property) >> spaced(':') >> type.as(:type)).as(:pair) }
+      rule(:property)   { name.as(:name) >> (spaced('(') >> stri("required").as(:required) >> spaced(')')).maybe }
+
+      rule(:pair)       { (property.as(:property) >> spaced(':') >> type.as(:type)).as(:pair) }
 
       rule(:pairs)      { pair >> (spaced(',') >> pair).repeat >> (spaced(',') >> type.as(:additional)).maybe }
 
@@ -119,8 +121,12 @@ module SwaggerYard
         { 'type' => 'array', 'items' => type }
       end
 
-      rule(pair: { property: simple(:prop), type: subtree(:type) }) do
-        { 'properties' => { prop.to_s => type } }
+      rule(pair: { property: subtree(:prop), type: subtree(:type) }) do
+        {
+          'name' => prop[:name].to_s,
+          'required' => prop[:required].present?,
+          'type' => type
+        }
       end
 
       rule(additional: subtree(:type)) do
@@ -130,9 +136,14 @@ module SwaggerYard
       rule(object: subtree(:properties)) do
         { 'type' => 'object' }.tap do |result|
           all_props = Array === properties ? properties : [properties]
-          props, additional = all_props.partition {|pr| pr['properties'] }
+          props, additional = all_props.partition {|pr| pr['name'] }
           props.each do |pr|
-            result['properties'] = (result['properties'] || {}).merge(pr['properties'])
+            result['properties'] ||= {}
+            result['properties'][pr['name']] = pr['type']
+            if pr['required']
+              result['required'] ||= []
+              result['required'] << pr['name']
+            end
           end
           result.update additional.first unless additional.empty?
         end
