@@ -1,16 +1,17 @@
 module SwaggerYard
   class ApiGroup
     attr_accessor :description, :resource
-    attr_reader :path_items, :authorizations, :class_name, :tag_group
+    attr_reader :path_items, :authorizations, :class_name, :tag_group, :is_paths_object
 
-    def self.from_yard_object(yard_object)
-      new.add_yard_object(yard_object)
+    def self.from_yard_object(yard_object, is_paths_object:)
+      new(is_paths_object: is_paths_object).add_yard_object(yard_object)
     end
 
-    def initialize
+    def initialize(is_paths_object:)
       @resource       = nil
       @path_items     = {}
       @authorizations = {}
+      @is_paths_object = is_paths_object
     end
 
     def valid?
@@ -46,7 +47,7 @@ module SwaggerYard
       @description = yard_object.docstring
       @class_name  = yard_object.path
 
-      if tag = yard_object.tags.detect {|t| t.tag_name == "resource"}
+      if tag = yard_object.tags.detect {|t| t.tag_name == is_paths_object ? "resource" : "webhook_group"}
         @resource = tag.text
       end
 
@@ -63,17 +64,19 @@ module SwaggerYard
 
     def add_path_item(yard_object)
       path = path_from_yard_object(yard_object)
-      operation = Operation.from_yard_object(yard_object, self)
+      operation = Operation.from_yard_object(yard_object, self, is_paths_object: is_paths_object)
 
       return if path.nil? || (operation.internal? && SwaggerYard.config.ignore_internal)
 
       path_item = (path_items[path] ||= PathItem.new(self))
-      path_item.add_operation(yard_object)
+      path_item.add_operation(yard_object, is_paths_object: is_paths_object)
       path
     end
 
     def path_from_yard_object(yard_object)
-      if tag = yard_object.tags.detect {|t| t.tag_name == "path"}
+      if !is_paths_object
+        yard_object.tags.detect {|t| t.tag_name == "event"}&.text
+      elsif tag = yard_object.tags.detect {|t| t.tag_name == "path"}
         tag.text
       elsif fn = SwaggerYard.config.path_discovery_function
         begin

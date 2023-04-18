@@ -7,8 +7,8 @@ module SwaggerYard
       @operations = {}
     end
 
-    def add_operation(yard_object)
-      operation = Operation.from_yard_object(yard_object, self)
+    def add_operation(yard_object, is_paths_object:)
+      operation = Operation.from_yard_object(yard_object, self, is_paths_object: is_paths_object)
       @operations[operation.http_method.downcase] = operation
     end
 

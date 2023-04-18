@@ -25,7 +25,7 @@ module SwaggerYard
         "tags" => tags(specification.tag_objects),
         "components" => components
       }
-      webhooks = webhooks(specification.webhook_objects)
+      webhooks = paths(specification.path_objects(for_webhooks: true))
       defs["x-webhooks"] = webhooks if webhooks.present?
       defs["x-tagGroups"] = specification.tag_groups if specification.tag_groups
       defs

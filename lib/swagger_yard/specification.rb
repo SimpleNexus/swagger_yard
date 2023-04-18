@@ -14,28 +14,23 @@ module SwaggerYard
       @authorizations = []
     end
 
-    def path_objects
-      api_groups.map(&:paths).reduce(Paths.new, :merge).tap do |paths|
+    def path_objects(for_webhooks: false)
+      groups = for_webhooks ? webhook_groups : path_groups
+      groups.map(&:paths).reduce(Paths.new, :merge).tap do |paths|
         warn_duplicate_operations(paths)
-      end
-    end
-
-    def webhook_objects
-      webhooks.map(&:events).reduce(Events.new, :merge).tap do |events|
-        warn_duplicate_webhook_operations(events)
       end
     end
 
     # Resources
     def tag_objects
-      api_groups.map(&:tag) + webhooks.map(&:tag)
+      path_groups.map(&:tag) + webhook_groups.map(&:tag)
     end
 
     def tag_groups
-      return if api_groups.none?(&:tag_group)
+      return if path_groups.none?(&:tag_group)
 
       groups = {}
-      api_groups.each do |group|
+      path_groups.each do |group|
         groups[group.tag_group] ||= []
         groups[group.tag_group] << group.resource
       end
@@ -53,7 +48,7 @@ module SwaggerYard
     end
 
     def security_objects
-      api_groups # triggers controller parsing in case it did not happen before
+      path_groups # triggers controller parsing in case it did not happen before
       Hash[authorizations.map {|auth| [auth.id, auth]}]
     end
 
@@ -62,12 +57,12 @@ module SwaggerYard
       @models ||= parse_models
     end
 
-    def api_groups
-      @api_groups ||= parse_controllers.select { |group| group.path_items.present? }
+    def path_groups
+      @path_groups ||= parse_controllers.select { |group| group.path_items.present? }
     end
 
-    def webhooks
-      @webhooks ||= parse_webhooks.select { |webhook_group| webhook_group.event_items.present? }
+    def webhook_groups
+      @webhook_groups ||= parse_webhook_groups.select { |webhook_group| webhook_group.path_items.present? }
     end
 
     def parse_models
@@ -87,20 +82,20 @@ module SwaggerYard
             obj.tags.select {|t| t.tag_name == "authorization"}.each do |t|
               @authorizations << Authorization.from_yard_object(t)
             end
-            ApiGroup.from_yard_object(obj)
+            ApiGroup.from_yard_object(obj, is_paths_object: true)
           end
         end
       end.flatten.select(&:valid?)
     end
 
-    def parse_webhooks
+    def parse_webhook_groups
       @webhook_paths.map do |webhook_path|
         Dir[webhook_path.to_s].map do |file_path|
           SwaggerYard.yard_class_objects_from_file(file_path).map do |obj|
             obj.tags.select {|t| t.tag_name == "authorization"}.each do |t|
               @authorizations << Authorization.from_yard_object(t)
             end
-            Webhook.from_yard_object(obj)
+            ApiGroup.from_yard_object(obj, is_paths_object: false)
           end
         end
       end.flatten.select(&:valid?)
@@ -112,19 +107,6 @@ module SwaggerYard
         pi.operations.each do |_, op|
           if operation_ids.include?(op.operation_id)
             SwaggerYard.log.warn("duplicate operation #{op.operation_id}")
-            next
-          end
-          operation_ids << op.operation_id
-        end
-      end
-    end
-
-    def warn_duplicate_webhook_operations(events)
-      operation_ids = []
-      events.event_items.each do |_, ei|
-        ei.webhook_operations.each do |_, op|
-          if operation_ids.include?(op.operation_id)
-            SwaggerYard.log.warn("duplicate webhook operation #{op.operation_id}")
             next
           end
           operation_ids << op.operation_id

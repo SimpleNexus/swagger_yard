@@ -50,7 +50,7 @@ module SwaggerYard
         "tags"                => tags(specification.tag_objects),
         "securityDefinitions" => security_defs(specification.security_objects)
       }
-      webhooks = webhooks(specification.webhook_objects)
+      webhooks = paths(specification.path_objects(for_webhooks: true))
       defs["x-webhooks"] = webhooks if webhooks.present?
       return defs
     end
@@ -88,12 +88,8 @@ module SwaggerYard
       }
     end
 
-    def paths(paths)
-      Hash[paths.path_items.map {|path,pi| [path, operations(pi.operations)] }]
-    end
-
-    def webhooks(webhooks)
-      Hash[webhooks.event_items.map {|event, ei| [event, operations(ei.webhook_operations)] }]
+    def paths(path_objects)
+      Hash[path_objects.path_items.map {|path, pi| [path, operations(pi.operations)] }]
     end
 
     def operations(ops)

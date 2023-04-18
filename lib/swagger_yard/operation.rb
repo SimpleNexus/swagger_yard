@@ -8,17 +8,21 @@ module SwaggerYard
     attr_reader :path_item, :responses, :extensions
 
     # TODO: extract to operation builder?
-    def self.from_yard_object(yard_object, path_item)
+    def self.from_yard_object(yard_object, path_item, is_paths_object:)
       new(path_item).tap do |operation|
         operation.ruby_method = yard_object.name(false)
         operation.description = yard_object.docstring
         yard_object.tags.each do |tag|
           case tag.tag_name
           when "path"
-            tag = SwaggerYard.requires_type(tag)
-            operation.add_path_params_and_method(tag) if tag
+            if is_paths_object
+              tag = SwaggerYard.requires_type(tag)
+              operation.add_path_params_and_method(tag) if tag
+            end
+          when "event"
+            operation.add_path_params_and_method(tag)
           when "parameter"
-            operation.add_parameter(tag)
+            operation.add_parameter(tag) if is_paths_object
           when "response_type"
             tag = SwaggerYard.requires_type(tag)
             operation.add_response_type(Type.from_type_list(tag.types), tag.text) if tag
@@ -96,14 +100,32 @@ module SwaggerYard
     # Example: [GET] /api/v2/ownerships
     # Example: [PUT] /api/v1/accounts/{account_id}
     def add_path_params_and_method(tag)
+      method = tag.tag_name == "event" ? "POST" : tag.types.first
       if @path && @http_method
-        SwaggerYard.log.warn 'multiple path tags not supported: ' \
-          "ignored [#{tag.types.first}] #{tag.text}"
+        SwaggerYard.log.warn 'multiple path/event tags not supported: ' \
+          "ignored [#{method}] #{tag.text}"
         return
       end
 
       @path = tag.text
-      @http_method = tag.types.first
+      @http_method = method
+
+      parse_path_params(tag.text).each do |name|
+        add_or_update_parameter Parameter.from_path_param(name)
+      end
+    end
+
+    ##
+    # Example: something_created_event
+    def add_event_params_and_method(tag)
+      if @path && @http_method
+        SwaggerYard.log.warn 'multiple path/event tags not supported: ' \
+          "ignored [#{tag.types&.first}] #{tag.text}"
+        return
+      end
+
+      @path = tag.text
+      @http_method = "POST"
 
       parse_path_params(tag.text).each do |name|
         add_or_update_parameter Parameter.from_path_param(name)

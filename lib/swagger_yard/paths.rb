@@ -27,7 +27,7 @@ module SwaggerYard
             info += " (#{resources_info.join(", ")})" if resources_info.present?
             info
           end
-          raise "Found duplicate operations for the same path (path: '#{path}', operations: #{operations_info.join(", ")})"
+          raise "Found duplicate operations for the same path (path: '#{path}', operation(s): #{operations_info.join(", ")})"
         end
 
         merged_items[path] = path_item + other_path_item
