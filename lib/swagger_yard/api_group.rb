@@ -64,12 +64,18 @@ module SwaggerYard
 
     def add_path_item(yard_object)
       path = path_from_yard_object(yard_object)
-      operation = Operation.from_yard_object(yard_object, self, is_paths_object: is_paths_object)
+      return if path.nil?
 
-      return if path.nil? || (operation.internal? && SwaggerYard.config.ignore_internal)
+      new_path_item = PathItem.new(path, self)
+      operation = new_path_item.add_operation(yard_object, is_paths_object: is_paths_object)
+      return if operation.internal? && SwaggerYard.config.ignore_internal
 
-      path_item = (path_items[path] ||= PathItem.new(self))
-      path_item.add_operation(yard_object, is_paths_object: is_paths_object)
+      if path_items[path]
+        path_items[path].merge(new_path_item)
+      else
+        path_items[path] = new_path_item
+      end
+
       path
     end
 

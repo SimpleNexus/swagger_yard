@@ -11,28 +11,14 @@ module SwaggerYard
     end
 
     def merge(other)
-      merged_items = {}
-      (paths + other.paths).uniq.each do |path|
-        path_item = path_items[path] || PathItem.new
-        other_path_item = other.path_items[path] || PathItem.new
-        duplicate_operations = path_item.operations.keys & other_path_item.operations.keys
-        if duplicate_operations.present?
-          operations_info = duplicate_operations.map do |operation_key|
-            resource = path_item.operations[operation_key].extended_attributes["x-api-resource"]
-            other_resource = other_path_item.operations[operation_key].extended_attributes["x-api-resource"]
-            resources_info = [resource, other_resource].compact.map do |r|
-              "#{r["class"]}.#{r["method"]}"
-            end
-            info = "#{operation_key}"
-            info += " (#{resources_info.join(", ")})" if resources_info.present?
-            info
-          end
-          raise "Found duplicate operations for the same path (path: '#{path}', operation(s): #{operations_info.join(", ")})"
+      other.path_items.each do |path, other_path_item|
+        if self.path_items.key?(path)
+          self.path_items[path].merge(other_path_item)
+        else
+          self.path_items[path] = other_path_item
         end
-
-        merged_items[path] = path_item + other_path_item
       end
-      Paths.new(merged_items)
+      return self
     end
   end
 end
