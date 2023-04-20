@@ -22,7 +22,7 @@ module SwaggerYard
           when "event"
             operation.add_path_params_and_method(tag)
           when "parameter"
-            operation.add_parameter(tag) if is_paths_object
+            operation.add_parameter(tag)
           when "response_type"
             tag = SwaggerYard.requires_type(tag)
             operation.add_response_type(Type.from_type_list(tag.types), tag.text) if tag
