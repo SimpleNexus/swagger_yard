@@ -12,7 +12,10 @@ module SwaggerYard
       metadata = {
         'openapi' => '3.0.0',
         'info' => Info.new.to_h,
-        'servers' => [{'url' => SwaggerYard.config.api_base_path}],
+        'servers' => [{
+          'url' => SwaggerYard.config.api_base_path,
+          'description' => SwaggerYard.config.api_base_path_description
+        }],
         'security' => security_requirement,
       }
       metadata["externalDocs"] = external_docs if external_docs

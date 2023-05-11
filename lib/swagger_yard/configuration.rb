@@ -1,6 +1,6 @@
 module SwaggerYard
   class Configuration
-    attr_accessor :api_version, :api_base_path
+    attr_accessor :api_version, :api_base_path, :api_base_path_description
     attr_accessor :swagger_version
     attr_accessor :title, :description
     attr_accessor :controller_path, :model_path, :webhook_path

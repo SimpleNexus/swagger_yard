@@ -4,7 +4,11 @@ module SwaggerYard
       hash = {
         "title"          => SwaggerYard.config.title,
         "description"    => SwaggerYard.config.description,
-        "version"        => SwaggerYard.config.api_version
+        "version"        => SwaggerYard.config.api_version,
+        "license"        => {
+          "name": "Apache 2.0",
+          "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
       }
       hash["termsOfService"] = SwaggerYard.config.terms_of_service if SwaggerYard.config.terms_of_service
       hash["x-logo"] = x_logo if x_logo
