@@ -25,7 +25,7 @@ module SwaggerYard
         end
         raise "Found duplicate operations for the same path (path: '#{self.path}', operation(s): #{operations_info.join(", ")})"
       end
-      self.operations.merge(other.operations)
+      self.operations.merge!(other.operations)
       return self
     end
 
