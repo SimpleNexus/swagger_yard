@@ -198,10 +198,7 @@ module SwaggerYard
         unless h['$ref']
           h["description"] = prop.description if prop.description && !prop.description.strip.empty?
           if prop.nullable
-            h["x-nullable"] = true
-            if h["type"]
-              h["type"] = [h["type"], "null"]
-            end
+            h["nullable"] = true
           end
           if prop.extensions.present?
             h.merge!(prop.extensions)
