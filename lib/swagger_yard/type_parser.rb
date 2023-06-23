@@ -77,7 +77,7 @@ module SwaggerYard
           { 'type' => 'object' }
         when "float", "double"
           { 'type' => 'number', 'format' => v }
-        when "date-time", "date", "time", "uuid"
+        when "date-time", "date", "time", "uuid", /\A(?:[a-zA-Z_]+_)?uri\z/
           { 'type' => 'string', 'format' => v }
         else
           name = Model.mangle(v)
