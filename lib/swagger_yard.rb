@@ -102,6 +102,16 @@ module SwaggerYard
       yard_objects_from_file(file_path, :class)
     end
 
+    #
+    # Parse all objects in the file and return the class objects found.
+    #
+    # @param file_path [string] The complete path to file
+    # @return [YARD] objects representing classes from the file
+    #
+    def yard_constant_objects_from_file(file_path)
+      yard_objects_from_file(file_path, :constant)
+    end
+
     ##
     # Register some custom yard tags used by swagger-ui
     def register_custom_yard_tags!
@@ -129,6 +139,7 @@ module SwaggerYard
       ::YARD::Tags::Library.define_directive(:model, :with_title_and_text, Directives::ParamClassDirective)
       ::YARD::Tags::Library.define_directive(:path, :with_types, Directives::PathDirective)
       ::YARD::Tags::Library.define_directive(:event, :with_types, Directives::EventDirective)
+      ::YARD::Tags::Library.define_directive(:property, :with_types_name_and_default, Directives::PropertyDirective)
     end
   end
 end

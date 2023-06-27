@@ -47,6 +47,10 @@ module SwaggerYard
       Hash[models.map {|m| [m.id, m]}]
     end
 
+    def property_objects
+      Hash[properties.map {|m| [m.id, m]}]
+    end
+
     def security_objects
       path_groups # triggers controller parsing in case it did not happen before
       Hash[authorizations.map {|auth| [auth.id, auth]}]
@@ -55,6 +59,10 @@ module SwaggerYard
     private
     def models
       @models ||= parse_models
+    end
+
+    def properties
+      @properties ||= parse_properties
     end
 
     def path_groups
@@ -73,6 +81,16 @@ module SwaggerYard
           end
         end
       end.flatten.compact.select(&:valid?)
+    end
+
+    def parse_properties
+      @model_paths.map do |model_path|
+        Dir[model_path.to_s].map do |file_path|
+          SwaggerYard.yard_constant_objects_from_file(file_path).map do |obj|
+            Property.from_constant(obj)
+          end
+        end
+      end.flatten.compact
     end
 
     def parse_controllers
