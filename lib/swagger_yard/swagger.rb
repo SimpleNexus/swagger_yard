@@ -158,11 +158,14 @@ module SwaggerYard
     end
 
     def models(model_objects)
-      Hash[model_objects.map { |name, mod| [name, model(mod)] }]
-    end
-
-    def properties(property_objects)
-      Hash[property_objects.map { |name, mod| [name, property(mod)] }]
+      model_objects.map do |name, mod|
+        if mod.is_a?(Property)
+          model = property(mod)
+        else
+          model = model(mod)
+        end
+        [name, model]
+      end.to_h
     end
 
     def model(mod)

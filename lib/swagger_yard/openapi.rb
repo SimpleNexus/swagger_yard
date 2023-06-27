@@ -35,10 +35,8 @@ module SwaggerYard
     end
 
     def components
-      models = models(specification.model_objects)
-      properties = properties(specification.property_objects)
       {
-        "schemas" => models.merge(properties),
+        "schemas" => models(specification.model_objects),
         "securitySchemes" => security_schemes(specification.security_objects)
       }
     end
