@@ -202,15 +202,16 @@ module SwaggerYard
 
     def property(prop)
       prop.type.schema_with(model_path: model_path).tap do |h|
-        unless h['$ref']
-          h["description"] = prop.description if prop.description && !prop.description.strip.empty?
-          if prop.nullable
-            h["nullable"] = true
-          end
-          if prop.extensions.present?
-            h.merge!(prop.extensions)
-          end
-          h["example"] = prop.example if prop.example
+        property_fields = {}
+        property_fields["description"] = prop.description if prop.description && !prop.description.strip.empty?
+        property_fields["nullable"] = true if prop.nullable
+        property_fields.merge!(prop.extensions) if prop.extensions.present?
+        property_fields["example"] = prop.example if prop.example
+        if h['$ref'] && property_fields.keys.any?
+          h["allOf"] = [{ "$ref" => h.delete("$ref") }]
+          h.merge!(property_fields)
+        elsif !h['$ref']
+          h.merge!(property_fields)
         end
       end
     end
