@@ -208,7 +208,7 @@ module SwaggerYard
         property_fields.merge!(prop.extensions) if prop.extensions.present?
         property_fields["example"] = prop.example if prop.example
         if h['$ref'] && property_fields.keys.any?
-          h["allOf"] = [{ "$ref" => h.delete("$ref") }]
+          h["oneOf"] = [{ "$ref" => h.delete("$ref") }]
           h.merge!(property_fields)
         elsif !h['$ref']
           h.merge!(property_fields)
